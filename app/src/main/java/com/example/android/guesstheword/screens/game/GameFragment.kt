@@ -64,15 +64,14 @@ class GameFragment : Fragment() {
             binding.scoreText.text = newScore.toString()
         })
 
+        viewModel.isGameFinished.observe(this, Observer { gameHasFinished ->
+            if (gameHasFinished) {
+                val action = GameFragmentDirections.actionGameToScore(viewModel.score.value ?: -1)
+                findNavController(this).navigate(action)
+                viewModel.onGameFinishComplete()
+            }
+        })
+
         return binding.root
-    }
-
-
-    /**
-     * Called when the game is finished
-     */
-    private fun gameFinished() {
-        val action = GameFragmentDirections.actionGameToScore(viewModel.score.value ?: -1)
-        findNavController(this).navigate(action)
     }
 }
