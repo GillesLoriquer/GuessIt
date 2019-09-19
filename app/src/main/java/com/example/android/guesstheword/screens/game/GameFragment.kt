@@ -55,14 +55,7 @@ class GameFragment : Fragment() {
         Timber.i("Called ViewModelProviders.of")
 
         binding.gameViewModel = viewModel
-
-        viewModel.word.observe(this, Observer { newWord ->
-            binding.wordText.text = newWord
-        })
-
-        viewModel.score.observe(this, Observer { newScore ->
-            binding.scoreText.text = newScore.toString()
-        })
+        binding.lifecycleOwner = this
 
         viewModel.isGameFinished.observe(this, Observer { gameHasFinished ->
             if (gameHasFinished) {
