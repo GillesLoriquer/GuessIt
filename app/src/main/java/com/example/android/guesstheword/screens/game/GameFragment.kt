@@ -54,8 +54,7 @@ class GameFragment : Fragment() {
         viewModel = ViewModelProviders.of(this).get(GameViewModel::class.java)
         Timber.i("Called ViewModelProviders.of")
 
-        binding.correctButton.setOnClickListener { viewModel.onCorrect() }
-        binding.skipButton.setOnClickListener { viewModel.onSkip() }
+        binding.gameViewModel = viewModel
 
         viewModel.word.observe(this, Observer { newWord ->
             binding.wordText.text = newWord
