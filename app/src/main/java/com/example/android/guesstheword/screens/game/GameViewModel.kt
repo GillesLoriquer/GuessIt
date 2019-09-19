@@ -8,6 +8,11 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import timber.log.Timber
 
+private val CORRECT_BUZZ_PATTERN = longArrayOf(100, 100, 100, 100, 100, 100)
+private val PANIC_BUZZ_PATTERN = longArrayOf(0, 200)
+private val GAME_OVER_BUZZ_PATTERN = longArrayOf(0, 2000)
+private val NO_BUZZ_PATTERN = longArrayOf(0)
+
 class GameViewModel : ViewModel() {
 
     // Timer
@@ -34,6 +39,10 @@ class GameViewModel : ViewModel() {
         DateUtils.formatElapsedTime(time)
     }
 
+    private var _eventBuzz = MutableLiveData<BuzzType>()
+    val eventBuzz: LiveData<BuzzType>
+        get() = _eventBuzz
+
     // The list of words - the front of the list is the next word to guess
     private lateinit var wordList: MutableList<String>
 
@@ -44,7 +53,9 @@ class GameViewModel : ViewModel() {
         // This is the number of milliseconds in a second
         const val ONE_SECOND = 1000L
         // This is the total time of the game
-        const val COUNTDOWN_TIME = 10000L
+        const val COUNTDOWN_TIME = 20000L
+        // Time at countdown start (seconds)
+        const val COUNTDOWN_PANIC = 10
     }
 
     init {
@@ -57,14 +68,24 @@ class GameViewModel : ViewModel() {
         // Creates a timer which triggers the end of the game when it finished
         timer = object : CountDownTimer(COUNTDOWN_TIME, ONE_SECOND) {
             override fun onFinish() {
+                _eventBuzz.value = BuzzType.GAME_OVER
                 _currentTime.value = DONE
                 _isGameFinished.value = true
             }
 
             override fun onTick(millisUntilFinished: Long) {
-                _currentTime.value = millisUntilFinished / ONE_SECOND
+                val currentTimeInSecond = millisUntilFinished / ONE_SECOND
+                if (currentTimeInSecond < COUNTDOWN_PANIC) _eventBuzz.value = BuzzType.COUNTDOWN_PANIC
+                _currentTime.value = currentTimeInSecond
             }
         }.also { it.start() }
+    }
+
+    enum class BuzzType(val pattern: LongArray) {
+        CORRECT(CORRECT_BUZZ_PATTERN),
+        GAME_OVER(GAME_OVER_BUZZ_PATTERN),
+        COUNTDOWN_PANIC(PANIC_BUZZ_PATTERN),
+        NO_BUZZ(NO_BUZZ_PATTERN)
     }
 
     override fun onCleared() {
@@ -123,6 +144,7 @@ class GameViewModel : ViewModel() {
 
     fun onCorrect() {
         _score.value = _score.value?.plus(1)
+        _eventBuzz.value = BuzzType.CORRECT
         nextWord()
     }
 
@@ -131,5 +153,9 @@ class GameViewModel : ViewModel() {
      */
     fun onGameFinishComplete() {
         _isGameFinished.value = false
+    }
+
+    fun onBuzzComplete() {
+        _eventBuzz.value = BuzzType.NO_BUZZ
     }
 }

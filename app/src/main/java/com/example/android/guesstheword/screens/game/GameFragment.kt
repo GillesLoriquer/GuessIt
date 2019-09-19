@@ -16,8 +16,11 @@
 
 package com.example.android.guesstheword.screens.game
 
+import android.content.Context.VIBRATOR_SERVICE
+import android.os.Build
 import android.os.Bundle
-import android.text.format.DateUtils
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +31,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.example.android.guesstheword.R
 import com.example.android.guesstheword.databinding.GameFragmentBinding
+import com.example.android.guesstheword.screens.game.GameViewModel.BuzzType.*
 import timber.log.Timber
 
 /**
@@ -65,6 +69,26 @@ class GameFragment : Fragment() {
             }
         })
 
+        viewModel.eventBuzz.observe(this, Observer { buzzType ->
+            if (buzzType != NO_BUZZ) {
+                buzz(buzzType.pattern)
+                viewModel.onBuzzComplete()
+            }
+        })
+
         return binding.root
+    }
+
+    private fun buzz(pattern: LongArray) {
+        val buzzer: Vibrator? = activity?.getSystemService(VIBRATOR_SERVICE) as Vibrator
+
+        buzzer?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                buzzer.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            } else {
+                //deprecated in API 26
+                buzzer.vibrate(pattern, -1)
+            }
+        }
     }
 }
